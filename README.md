@@ -1,117 +1,114 @@
-# 🚀 Event-Driven Microservices with NestJS & Apache Kafka
+<p align="center">
+  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+</p>
 
-An enterprise-ready, scalable, event-driven microservices platform built with **NestJS**, **Apache Kafka** (Redpanda), **PostgreSQL**, and **Drizzle ORM**.
+[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
+[circleci-url]: https://circleci.com/gh/nestjs/nest
 
----
+  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
+    <p align="center">
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
+<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
+<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
+<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
+<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
+  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
+    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
+  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+</p>
+  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
+  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## 📌 Project Overview
+## Description
 
-This repository demonstrates the transition from a traditional monolithic backend to a fully decoupled, distributed microservices architecture. Microservices communicate asynchronously via Kafka topics, ensuring loose coupling, fault tolerance, and independent scalability.
+[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-### Core Architecture Highlights
+## Project setup
 
-```mermaid
-flowchart TD
-    Client([Client / Web Apps]) -->|HTTP / REST| Gateway[API Gateway]
-
-    subgraph Internal Network
-        Gateway -->|Reverse Proxy / HTTP| Auth[Auth Service]
-        Gateway -->|Reverse Proxy / HTTP| Events[Events Service]
-        Gateway -->|Reverse Proxy / HTTP| Tickets[Tickets Service]
-
-        subgraph Event Broker [Apache Kafka / Redpanda]
-            TopicAuth[(user.events)]
-            TopicTickets[(ticket.events)]
-            TopicNotifications[(notification.events)]
-        end
-
-        Auth -->|Publish| TopicAuth
-        Events -->|Publish| TopicTickets
-        Tickets -->|Publish| TopicTickets
-
-        TopicTickets -->|Consume| Notifications[Notification Service]
-        TopicAuth -->|Consume| Notifications
-        TopicTickets -->|Consume| Events
-    end
-
-    Auth -.-> DB1[(PostgreSQL: Auth DB)]
-    Events -.-> DB2[(PostgreSQL: Events DB)]
-    Tickets -.-> DB3[(PostgreSQL: Tickets DB)]
-    Gateway -.-> RedisCache[(Redis: Rate Limiter)]
+```bash
+$ pnpm install
 ```
 
----
+## Compile and run the project
 
-## 🏗️ Services Breakdown
+```bash
+# development
+$ pnpm run start
 
-| Service | Responsibility | Communication |
-| :--- | :--- | :--- |
-| **API Gateway** | Central ingress point, request validation, global exception filters, rate limiting, and route delegation. | HTTP / REST |
-| **Auth Service** | User registration, credential verification, JWT token issuance, and identity lifecycle. | HTTP + Kafka |
-| **Events Service** | Event scheduling, venue allocation, capacity definitions, and domain event publishing. | HTTP + Kafka |
-| **Tickets Service** | Ticket reservation, inventory management, distributed transactions, and order states. | HTTP + Kafka |
-| **Notification Service** | Async event consumer for sending emails, SMS, and transactional alerts. | Kafka Consumer |
-| **Shared Core Library** | Internal shared workspace package housing common DTOs, Kafka topic contracts, enums, and utility interceptors. | Monorepo / Shared Package |
+# watch mode
+$ pnpm run start:dev
 
----
+# production mode
+$ pnpm run start:prod
+```
 
-## 🛠️ Technology Stack
+## Run tests
 
-- **Application Framework**: [NestJS](https://nestjs.com/) (TypeScript)
-- **Message Broker**: [Apache Kafka](https://kafka.apache.org/) (with [Redpanda](https://redpanda.com/) for lightning-fast local development)
-- **Database & Data Layer**: [PostgreSQL](https://www.postgresql.org/) managed via [Drizzle ORM](https://orm.drizzle.team/)
-- **Caching & Throttling**: [Redis](https://redis.io/) (rate limiting and temporary session caching)
-- **DevOps & Containers**: Docker & Docker Compose
-- **Shared Code**: Monorepo structure with shared TypeScript definitions & contracts
+```bash
+# unit tests
+$ pnpm run test
 
----
+# e2e tests
+$ pnpm run test:e2e
 
-## ☁️ Cloud & AWS Integration Roadmap
+# test coverage
+$ pnpm run test:cov
+```
 
-As the project evolves, the infrastructure will be extended to support production-ready cloud deployments on **Amazon Web Services (AWS)**:
+## Deployment
 
-- [ ] **Managed Event Streaming**: Migration from local Redpanda to **Amazon MSK** (Managed Streaming for Apache Kafka).
-- [ ] **Relational Database**: Managed multi-AZ **Amazon RDS (PostgreSQL)** with connection pooling.
-- [ ] **In-Memory Cache**: **Amazon ElastiCache** for high-throughput Redis caching.
-- [ ] **Container Orchestration**: Containerized deployments via **AWS ECS (Fargate)** or **EKS (Kubernetes)**.
-- [ ] **Object Storage & Assets**: **Amazon S3** integration for event media and ticket PDF generation.
-- [ ] **Secret Management & Observability**: AWS Secrets Manager, CloudWatch Logs, and distributed tracing.
+When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
 
----
+If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
 
-## 🏁 Getting Started
+```bash
+$ pnpm install -g @nestjs/mau
+$ mau deploy
+```
 
-### Prerequisites
+With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
 
-- [Node.js](https://nodejs.org/) (v20+ recommended)
-- [Docker](https://www.docker.com/) & Docker Compose
-- [pnpm](https://pnpm.io/) or `npm`
+## Observability
 
-### Local Environment Setup
+In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/bbaymistery/nestjs_mikroservice_kafka.git
-   cd nestjs_mikroservice_kafka
-   ```
+[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
 
-2. **Start Infrastructure Services (Kafka, Postgres, Redis):**
-   ```bash
-   docker compose up -d
-   ```
+- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
+- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
+- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
+- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
+- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
+- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
+- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
+- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
 
-3. **Install Dependencies:**
-   ```bash
-   npm install
-   ```
+## Resources
 
-4. **Run Services in Development Mode:**
-   ```bash
-   npm run start:dev
-   ```
+Check out a few resources that may come in handy when working with NestJS:
 
----
+- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
+- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
+- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
+- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
+- Auto-instrument your application with [NestJS Observer](https://observer.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
+- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
+- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
+- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
+- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
 
-## 📜 License
+## Support
 
-This project is licensed under the [MIT License](LICENSE).
+Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+
+## Stay in touch
+
+- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
+- Website - [https://nestjs.com](https://nestjs.com/)
+- Twitter - [@nestframework](https://twitter.com/nestframework)
+
+## License
+
+Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
