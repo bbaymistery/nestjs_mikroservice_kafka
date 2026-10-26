@@ -25,7 +25,7 @@
   "files": [],
   "references": [
     {
-      "path": "./apps/eventflow-app/tsconfig.app.json"
+      "path": "./apps/api-gateway/tsconfig.app.json"
     },
     {
       "path": "./apps/auth-service/tsconfig.app.json"
