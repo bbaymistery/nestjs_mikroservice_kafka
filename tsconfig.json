@@ -17,6 +17,18 @@
     "skipLibCheck": true,
     "strict": true,
     "strictPropertyInitialization": false,
-    "types": ["vitest/globals", "node"]
-  }
+    "types": [
+      "vitest/globals",
+      "node"
+    ]
+  },
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/eventflow-app/tsconfig.app.json"
+    },
+    {
+      "path": "./apps/auth-service/tsconfig.app.json"
+    }
+  ]
 }
