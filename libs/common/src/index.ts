@@ -1,5 +1,5 @@
-export * from './common.module.js';
-export * from './common.service.js';
+export * from './common.module';
+export * from './common.service';
 
 
 // Constants

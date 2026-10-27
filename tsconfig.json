@@ -1,45 +1,32 @@
 {
   "compilerOptions": {
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolvePackageJsonExports": true,
-    "esModuleInterop": true,
-    "isolatedModules": true,
+    "module": "commonjs",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2023",
+    "target": "ES2021",
     "sourceMap": true,
     "outDir": "./dist",
     "incremental": true,
     "skipLibCheck": true,
     "strict": true,
     "strictPropertyInitialization": false,
-    "types": [
-      "vitest/globals",
-      "node"
-    ],
+    "types": ["node"],
     "paths": {
       "@app/common": [
-        "./libs/common/src/index.ts"
+        "./libs/common/src"
       ],
       "@app/common/*": [
         "./libs/common/src/*"
+      ],
+      "@app/kafka": [
+        "./libs/kafka/src"
+      ],
+      "@app/kafka/*": [
+        "./libs/kafka/src/*"
       ]
     }
-  },
-  "files": [],
-  "references": [
-    {
-      "path": "./apps/api-gateway/tsconfig.app.json"
-    },
-    {
-      "path": "./apps/auth-service/tsconfig.app.json"
-    },
-    {
-      "path": "./libs/common/tsconfig.lib.json"
-    }
-  ]
+  }
 }

@@ -5,8 +5,11 @@
 
 # TypeScript build cache
 *.tsbuildinfo
+
 cmd.txt
 cmd.md
+kafkaDocker.md
+
 # Logs
 logs
 *.log
