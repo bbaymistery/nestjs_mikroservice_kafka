@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EventFlow - AuthService & Kafka Arxitekturası Vizual Bələdçi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #0a0f1d;
+      --bg-card: rgba(17, 24, 39, 0.85);
+      --bg-card-hover: rgba(30, 41, 59, 0.9);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(56, 189, 248, 0.3);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-blue: #38bdf8;
+      --accent-purple: #a855f7;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-kafka: #ff6b35;
+      --accent-postgres: #336791;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.6;
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 70%, rgba(168, 85, 247, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(255, 107, 53, 0.04) 0%, transparent 60%);
+      background-attachment: fixed;
+      padding-bottom: 80px;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* HEADER */
+    header {
+      padding: 48px 0 32px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 40px;
+    }
+
+    .badge-top {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--accent-blue);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+
+    .badge-top span.pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 10px var(--accent-emerald);
+      animation: pulseAnim 2s infinite;
+    }
+
+    @keyframes pulseAnim {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.3); }
+    }
+
+    h1 {
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+    }
+
+    p.subtitle {
+      font-size: 18px;
+      color: var(--text-muted);
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    /* INFRASTRUCTURE STATUS BAR */
+    .infra-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    .infra-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      backdrop-filter: blur(12px);
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .infra-card:hover {
+      border-color: var(--border-glow);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .infra-card .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 8px var(--accent-emerald);
+      margin-right: 6px;
+    }
+
+    .infra-card .name {
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+    }
+
+    .infra-card .port {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.08);
+      padding: 2px 8px;
+      border-radius: 6px;
+      width: fit-content;
+    }
+
+    .infra-card .desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* MAIN TABS */
+    .tabs-wrapper {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      border-color: var(--accent-blue);
+    }
+
+    .tab-btn.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent-blue);
+      color: #ffffff;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+    }
+
+    .tab-btn .method-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .method-post { background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); }
+    .method-get { background: rgba(56, 189, 248, 0.2); color: var(--accent-blue); }
+
+    /* SCENARIO CONTENT CONTAINER */
+    .scenario-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 36px;
+      margin-bottom: 48px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .scenario-header {
+      margin-bottom: 28px;
+    }
+
+    .scenario-header h2 {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .scenario-header p {
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+
+    /* STEP FLOW PIPELINE (Interactive visual nodes) */
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      position: relative;
+      margin: 40px 0;
+    }
+
+    @media (max-width: 900px) {
+      .pipeline {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .pipeline-step {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .pipeline-step:hover {
+      border-color: var(--accent-blue);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .step-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(56, 189, 248, 0.2);
+      color: var(--accent-blue);
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 4px;
+    }
+
+    .step-title {
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--text-main);
+    }
+
+    .step-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .step-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      width: fit-content;
+      margin-top: auto;
+    }
+
+    .badge-postgres {
+      background: rgba(51, 103, 145, 0.25);
+      border-color: rgba(51, 103, 145, 0.6);
+      color: #60a5fa;
+    }
+
+    .badge-kafka {
+      background: rgba(255, 107, 53, 0.2);
+      border-color: rgba(255, 107, 53, 0.6);
+      color: #fb923c;
+    }
+
+    .badge-jwt {
+      background: rgba(168, 85, 247, 0.2);
+      border-color: rgba(168, 85, 247, 0.6);
+      color: #c084fc;
+    }
+
+    /* CODE & SIMULATOR SECTION */
+    .split-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 24px;
+      margin-top: 28px;
+    }
+
+    @media (max-width: 900px) {
+      .split-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .code-box {
+      background: #060913;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .code-header {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .code-header span.dot-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .code-header span.dot-group i {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot-red { background: #ef4444; }
+    .dot-yellow { background: #f59e0b; }
+    .dot-green { background: #10b981; }
+
+    pre {
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+
+    .code-keyword { color: #f43f5e; }
+    .code-fn { color: #38bdf8; }
+    .code-str { color: #34d399; }
+    .code-comment { color: #64748b; font-style: italic; }
+    .code-highlight {
+      background: rgba(255, 107, 53, 0.15);
+      border-left: 3px solid var(--accent-kafka);
+      display: block;
+      margin: 0 -16px;
+      padding: 2px 16px;
+    }
+
+    /* EXPLANATION CARDS */
+    .info-card {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .info-card h4 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .info-card ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .info-card li {
+      font-size: 13px;
+      color: var(--text-muted);
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .info-card li::before {
+      content: "✔";
+      position: absolute;
+      left: 0;
+      color: var(--accent-emerald);
+      font-weight: bold;
+    }
+
+    .info-card li strong {
+      color: #e2e8f0;
+    }
+
+    /* KAFKA ROLE EXPLAINER DEEP DIVE */
+    .kafka-deepdive {
+      margin-top: 48px;
+      background: linear-gradient(180deg, rgba(255, 107, 53, 0.05) 0%, rgba(17, 24, 39, 0.8) 100%);
+      border: 1px solid rgba(255, 107, 53, 0.25);
+      border-radius: 16px;
+      padding: 36px;
+    }
+
+    .kafka-deepdive h3 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent-kafka);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 800px) {
+      .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .comparison-col {
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid var(--border-color);
+    }
+
+    .comparison-col.bad {
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .comparison-col.good {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.03);
+    }
+
+    .comparison-col h4 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .comparison-col.bad h4 { color: #f87171; }
+    .comparison-col.good h4 { color: #34d399; }
+
+    /* TEST INSTRUCTIONS & CURL */
+    .test-section {
+      margin-top: 48px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 36px;
+    }
+
+    .test-section h3 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .curl-card {
+      background: #050811;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .curl-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .copy-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .copy-btn:hover {
+      background: var(--accent-blue);
+      color: #000;
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- HEADER -->
+    <header>
+      <div class="badge-top">
+        <span class="pulse"></span> Bütün Servislər Canlıdır
+      </div>
+      <h1>AuthService & Kafka Necə İşləyir?</h1>
+      <p class="subtitle">Mikroservis arxitekturasında Qeydiyyat (Register), Giriş (Login), Profil (Profile) və Apache Kafka hadisə zəncirinin vizual xəritəsi.</p>
+    </header>
+
+    <!-- CANLI İNFRASTRUKTUR STATUS PANORAMASI -->
+    <div class="infra-grid">
+      <div class="infra-card">
+        <div class="name"><span class="status-dot"></span> API Gateway</div>
+        <div class="port">Port 3000</div>
+        <div class="desc">Xarici dünyaya açılan tək qapı (Bütün sorğuları qəbul edir)</div>
+      </div>
+      <div class="infra-card">
+        <div class="name"><span class="status-dot"></span> Auth Service</div>
+        <div class="port">Port 3001</div>
+        <div class="desc">İstifadəçi qeydiyyatı, şifrələmə və JWT token istehsalı</div>
+      </div>
+      <div class="infra-card">
+        <div class="name"><span class="status-dot"></span> PostgreSQL</div>
+        <div class="port">Port 5432</div>
+        <div class="desc">Drizzle ORM ilə daimi saxlanılan istifadəçi cədvəlləri</div>
+      </div>
+      <div class="infra-card">
+        <div class="name"><span class="status-dot"></span> Apache Kafka</div>
+        <div class="port">Port 9093 / 29092</div>
+        <div class="desc">Hadisələrin (Events) paylandığı mərkəzi mesaj brokeri</div>
+      </div>
+      <div class="infra-card">
+        <div class="name"><span class="status-dot"></span> Kafka UI</div>
+        <div class="port">Port 8080</div>
+        <div class="desc">Brauzerdə Topic-ləri və mesajları canlı izləmə paneli</div>
+      </div>
+      <div class="infra-card">
+        <div class="name"><span class="status-dot"></span> Zookeeper</div>
+        <div class="port">Port 2181</div>
+        <div class="desc">Kafka brokerlərinin sağlamlığını idarə edən koordinator</div>
+      </div>
+    </div>
+
+    <!-- Ssenari Seçimləri (TABLAR) -->
+    <div class="tabs-wrapper">
+      <button class="tab-btn active" onclick="switchScenario('register')">
+        <span class="method-tag method-post">POST</span> 1. Qeydiyyat (Register Flow)
+      </button>
+      <button class="tab-btn" onclick="switchScenario('login')">
+        <span class="method-tag method-post">POST</span> 2. Giriş (Login Flow)
+      </button>
+      <button class="tab-btn" onclick="switchScenario('profile')">
+        <span class="method-tag method-get">GET</span> 3. Profil (Profile Flow)
+      </button>
+    </div>
+
+    <!-- 1. REGISTER FLOW BOX -->
+    <div id="scenario-register" class="scenario-box">
+      <div class="scenario-header">
+        <h2><span style="color: var(--accent-emerald);">POST</span> /register — İstifadəçi Qeydiyyatı və Kafka Hadisəsi</h2>
+        <p>İstifadəçi qeydiyyatdan keçən kimi AuthService onu Postgres bazasına yazır və eyni anda Kafka-ya "Xəbər" (Event) atır.</p>
+      </div>
+
+      <!-- VİZUAL ZƏNCİR (PIPELINE) -->
+      <div class="pipeline">
+        <div class="pipeline-step">
+          <div class="step-number">1</div>
+          <div class="step-title">Sorğunun Qəbulu</div>
+          <div class="step-desc">Postman və ya Veb brauzerdən <code>RegisterDto</code> (email, password, name) Controller-ə daxil olur.</div>
+          <div class="step-badge">AuthServiceController</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-number">2</div>
+          <div class="step-title">Şifrə & Baza Əməliyyatı</div>
+          <div class="step-desc">Emailin təkrar olub-olmaması yoxlanılır. Şifrə <strong>bcrypt</strong> ilə hash-lənir və Drizzle ORM ilə bazaya yazılır.</div>
+          <div class="step-badge badge-postgres">PostgreSQL 5432</div>
+        </div>
+        <div class="pipeline-step" style="border-color: rgba(255, 107, 53, 0.5); background: rgba(255, 107, 53, 0.05);">
+          <div class="step-number" style="background: rgba(255, 107, 53, 0.3); color: #ff6b35;">3</div>
+          <div class="step-title">Kafka-ya Hadisə (Emit) 🔥</div>
+          <div class="step-desc"><code>user.registered</code> mövzusuna mesaj göndərilir: <em>"Bu adam qeydiyyatdan keçdi!"</em></div>
+          <div class="step-badge badge-kafka">Kafka Topic: user.registered</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-number">4</div>
+          <div class="step-title">Sürətli Cavab</div>
+          <div class="step-desc">İstifadəçiyə dərhal cavab qaytarılır: <code>{ message: "User registered successfully", userId }</code>.</div>
+          <div class="step-badge">HTTP 201 Created</div>
+        </div>
+      </div>
+
+      <!-- KOD VƏ İZAHAT -->
+      <div class="split-grid">
+        <div class="code-box">
+          <div class="code-header">
+            <span class="dot-group"><i class="dot-red"></i><i class="dot-yellow"></i><i class="dot-green"></i></span>
+            <span>auth-service.service.ts</span>
+          </div>
+          <pre><code><span class="code-comment">// 1. İstifadəçi bazaya yazılır</span>
+<span class="code-keyword">const</span> [user] = <span class="code-keyword">await</span> <span class="code-keyword">this</span>.dbService.db
+  .<span class="code-fn">insert</span>(users)
+  .<span class="code-fn">values</span>({ email, password: hashedPassword, name })
+  .<span class="code-fn">returning</span>();
+
+<span class="code-highlight"><span class="code-comment">// 2. Kafka Broker-ə (localhost:9093) Hadisə Göndərilir</span>
+<span class="code-keyword">this</span>.kafkClient.<span class="code-fn">emit</span>(KAFKA_TOPICS.USER_REGISTERED, {
+  userId: user.id,
+  email: user.email,
+  name: user.name,
+  timestamp: <span class="code-keyword">new</span> Date().toISOString(),
+});</span>
+
+<span class="code-keyword">return</span> { message: <span class="code-str">'User registered successfully'</span>, userId: user.id };</code></pre>
+        </div>
+
+        <div class="info-card">
+          <h4>💡 Niyə Kafka İstifadə Edirik?</h4>
+          <ul>
+            <li><strong>Gözləmə Yoxdur:</strong> AuthService istifadəçiyə xoşgəldin emaili göndərməyi gözləmir. Xəbəri Kafka-ya atıb dərhal müştəriyə cavab qaytarır (millisaniyələr içində!).</li>
+            <li><strong>Decoupling (Asılılığın kəsilməsi):</strong> AuthService gələcəkdə yaradılacaq <em>EmailService</em> və ya <em>AnalyticsService</em>-in harda olduğunu bilmir və bilməyə ehtiyacı da yoxdur.</li>
+            <li><strong>İtmir:</strong> Kafka bu mesajı Docker-dəki diskdə etibarlı saxlayır. Email servisi sönülü olsa belə, sabah qalxanda bu mesajı oxuyub emailini atacaq.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. LOGIN FLOW BOX -->
+    <div id="scenario-login" class="scenario-box" style="display: none;">
+      <div class="scenario-header">
+        <h2><span style="color: var(--accent-emerald);">POST</span> /login — Şifrənin Doğrulanması və JWT İstehsalı</h2>
+        <p>İstifadəçi email və şifrəsini göndərir. AuthService şifrəni tutuşdurur, xüsusi kriptoqrafik JWT Token verir və Kafka-ya "Giriş edildi" xəbəri ötürür.</p>
+      </div>
+
+      <div class="pipeline">
+        <div class="pipeline-step">
+          <div class="step-number">1</div>
+          <div class="step-title">Məlumatın Yoxlanışı</div>
+          <div class="step-desc">Postgres bazasından emailə görə istifadəçi tapılır. Əgər yoxdursa <code>401 Unauthorized</code> qaytarılır.</div>
+          <div class="step-badge badge-postgres">PostgreSQL 5432</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-number">2</div>
+          <div class="step-title">Bcrypt Hash Müqayisəsi</div>
+          <div class="step-desc">Gələn açıq şifrə bazadakı hash ilə <code>bcrypt.compare()</code> edilir. Düzdürsə davam edilir.</div>
+          <div class="step-badge">Bcrypt Verification</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-number">3</div>
+          <div class="step-title">JWT İmzalanması</div>
+          <div class="step-desc"><code>jwtService.sign({ sub: user.id, email })</code> ilə rəqəmsal imzalı təhlükəsiz Bearer Token yaradılır.</div>
+          <div class="step-badge badge-jwt">JWT Token (1d müddətli)</div>
+        </div>
+        <div class="pipeline-step" style="border-color: rgba(255, 107, 53, 0.5); background: rgba(255, 107, 53, 0.05);">
+          <div class="step-number" style="background: rgba(255, 107, 53, 0.3); color: #ff6b35;">4</div>
+          <div class="step-title">Kafka-ya Hadisə (Emit) 🔥</div>
+          <div class="step-desc"><code>user.login</code> mövzusuna xəbər atılır: <em>"Filankəs sistemə daxil oldu"</em> (təhlükəsizlik və audit loqu üçün).</div>
+          <div class="step-badge badge-kafka">Kafka Topic: user.login</div>
+        </div>
+      </div>
+
+      <div class="split-grid">
+        <div class="code-box">
+          <div class="code-header">
+            <span class="dot-group"><i class="dot-red"></i><i class="dot-yellow"></i><i class="dot-green"></i></span>
+            <span>auth-service.service.ts</span>
+          </div>
+          <pre><code><span class="code-keyword">const</span> token = <span class="code-keyword">this</span>.jwtService.<span class="code-fn">sign</span>({ sub: user.id, email: user.email });
+
+<span class="code-highlight"><span class="code-comment">// Təhlükəsizlik loqu və audit üçün Kafka-ya emit edirik</span>
+<span class="code-keyword">this</span>.kafkClient.<span class="code-fn">emit</span>(KAFKA_TOPICS.USER_LOGIN, {
+  userId: user.id,
+  timestamp: <span class="code-keyword">new</span> Date().toISOString(),
+});</span>
+
+<span class="code-keyword">return</span> {
+  access_token: token,
+  user: { id: user.id, email: user.email, name: user.name, role: user.role }
+};</code></pre>
+        </div>
+
+        <div class="info-card">
+          <h4>🔑 Login-dən Nə Qazanırıq?</h4>
+          <ul>
+            <li><strong>access_token:</strong> Müştəri bu tokeni cibinə qoyur (saxlayır). Növbəti bütün qorunan səhifələrə (bilet almaq, tədbir yaratmaq) bu tokenlə girəcək.</li>
+            <li><strong>Kafka `user.login`:</strong> Bank və ya təhlükəsizlik sistemlərində olduğu kimi, kimin nə vaxt daxil olduğunu izləmək üçün Kafka vasitəsilə Təhlükəsizlik/Audit servislərinə məlumat verilir.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. PROFILE FLOW BOX -->
+    <div id="scenario-profile" class="scenario-box" style="display: none;">
+      <div class="scenario-header">
+        <h2><span style="color: var(--accent-blue);">GET</span> /profile — Qorunan Səhifə və JWT Guard</h2>
+        <p>İstifadəçi öz məlumatlarını oxumaq istəyir. Burada <strong>KAFKA İŞTİRAK ETMİR!</strong> Niyə? Çünki bu sinxron oxuma sorğusudur.</p>
+      </div>
+
+      <div class="pipeline" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="pipeline-step">
+          <div class="step-number">1</div>
+          <div class="step-title">Bearer Token Göndərilir</div>
+          <div class="step-desc">Header: <code>Authorization: Bearer &lt;TOKEN&gt;</code> ilə sorğu göndərilir.</div>
+          <div class="step-badge badge-jwt">HTTP Header</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-number">2</div>
+          <div class="step-title">Passport JWT Guard Yoxlayır</div>
+          <div class="step-desc"><code>jwt.strategy.ts</code> tokenin gizli açarını (`secret`) yoxlayır, token saxta və ya vaxtı keçmiş deyilsə <code>userId</code>-ni çıxarır.</div>
+          <div class="step-badge">JwtStrategy Validate</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-number">3</div>
+          <div class="step-title">Baza Oxunuşu (SELECT)</div>
+          <div class="step-desc">Drizzle ORM ilə yalnız həmin <code>userId</code>-yə aid məlumatlar oxunur və istifadəçiyə qaytarılır.</div>
+          <div class="step-badge badge-postgres">Drizzle SELECT</div>
+        </div>
+      </div>
+
+      <div class="split-grid">
+        <div class="code-box">
+          <div class="code-header">
+            <span class="dot-group"><i class="dot-red"></i><i class="dot-yellow"></i><i class="dot-green"></i></span>
+            <span>auth-service.controller.ts</span>
+          </div>
+          <pre><code><span class="code-comment">// Qorunan Endpoint: Yalnız etibarlı JWT Tokeni olanlar girə bilər</span>
+@<span class="code-fn">UseGuards</span>(<span class="code-fn">AuthGuard</span>(<span class="code-str">'jwt'</span>))
+@<span class="code-fn">Get</span>(<span class="code-str">'profile'</span>)
+<span class="code-fn">getProfile</span>(@<span class="code-fn">Request</span>() req: { user: { userId: string } }) {
+  <span class="code-keyword">return</span> <span class="code-keyword">this</span>.authServiceService.<span class="code-fn">getProfile</span>(req.user.userId);
+}</code></pre>
+        </div>
+
+        <div class="info-card">
+          <h4>🤔 Niyə Profile-da Kafka Yoxdur?</h4>
+          <ul>
+            <li><strong>Qızıl Qayda:</strong> Kafka yalnız **HADİSƏ (Event)** baş verəndə istifadə olunur (yeni qeydiyyat, bilet satışı, ödəniş qəbulu).</li>
+            <li>Profil məlumatını oxumaq isə sadəcə bir **Göstərmə (Query)** əməliyyatıdır. Dünyada heç bir başqa servis sizin öz profilinizə baxmağınızla maraqlanmır.</li>
+            <li>Ona görə də bura birbaşa PostgreSQL-dən dərhal cavab qaytarılır.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- MÜQAYİSƏ: MONOLİT VS KAFKA İLƏ MİKROSERVİS -->
+    <div class="kafka-deepdive">
+      <h3>⚡ Kafka Nə Qazandırır? (Arxitektura Dərsi)</h3>
+      <p style="color: #cbd5e1; font-size: 15px;">Təsəvvür edin ki, sabah layihəmiz böyüdü və <strong>Mail Servisi</strong>, <strong>Bilet Satış Servisi</strong>, <strong>Statistika Servisi</strong> əlavə olundu:</p>
+
+      <div class="comparison-grid">
+        <div class="comparison-col bad">
+          <h4>❌ Kafka Olmasaydı (Köhnə Yol):</h4>
+          <p style="font-size: 13px; color: #94a3b8; margin-bottom: 12px;">İstifadəçi "Qeydiyyat" düyməsinə basanda AuthService təkbaşına hər şeyi etməli idi:</p>
+          <ul style="font-size: 13px; color: #fca5a5; display: flex; flex-direction: column; gap: 8px; list-style: none;">
+            <li>1. Bazaya yaz (50ms)</li>
+            <li>2. Mail servisinə HTTP sorğusu at və cavab gözlə (1500ms)</li>
+            <li>3. Statistika servisinə zəng vur (300ms)</li>
+            <li>💥 Əgər Mail servisi xarab idisə, bütün qeydiyyat çökürdü və müştəri 2 saniyə ekrana baxıb gözləyirdi!</li>
+          </ul>
+        </div>
+
+        <div class="comparison-col good">
+          <h4>✔ Kafka İlə Event-Driven (Bizim Yolumuz):</h4>
+          <p style="font-size: 13px; color: #94a3b8; margin-bottom: 12px;">İstifadəçi "Qeydiyyat" düyməsinə basanda:</p>
+          <ul style="font-size: 13px; color: #86efac; display: flex; flex-direction: column; gap: 8px; list-style: none;">
+            <li>1. Bazaya yaz (50ms)</li>
+            <li>2. Kafka-ya xəbər at (2ms) və dərhal istifadəçiyə cavab ver!</li>
+            <li>🚀 Müştəri 50 millisaniyədə qeydiyyatdan keçir!</li>
+            <li>🛡️ Mail servisi sönsə belə heç nə çökmür; sabah qalxanda Kafka-dakı növbədən mesajı götürüb emailini göndərəcək.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- CANLI TEST ƏMRLƏRİ (CURL & POSTMAN) -->
+    <div class="test-section">
+      <h3>🧪 İndi Bu Servisləri Necə Test Edə Bilərsiniz?</h3>
+      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Postman və ya terminalınızda bu sorğuları ataraq tam zənciri canlı test edin:</p>
+
+      <!-- CURL 1: REGISTER -->
+      <div class="curl-card">
+        <div class="curl-title">
+          <span>1. Qeydiyyat Sorğusu (POST http://localhost:3001/register)</span>
+          <button class="copy-btn" onclick="copyText('curl-reg')">Kopyala</button>
+        </div>
+        <pre><code id="curl-reg">curl -X POST http://localhost:3001/register \
+  -H "Content-Type: application/json" \
+  -d '{"email": "ali@example.com", "password": "password123", "name": "Ali Valiyev"}'</code></pre>
+      </div>
+
+      <!-- CURL 2: LOGIN -->
+      <div class="curl-card">
+        <div class="curl-title">
+          <span>2. Giriş Sorğusu və Token Almaq (POST http://localhost:3001/login)</span>
+          <button class="copy-btn" onclick="copyText('curl-login')">Kopyala</button>
+        </div>
+        <pre><code id="curl-login">curl -X POST http://localhost:3001/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "ali@example.com", "password": "password123"}'</code></pre>
+      </div>
+
+      <!-- KAFKA UI LINK -->
+      <div style="background: rgba(255, 107, 53, 0.1); border: 1px solid rgba(255, 107, 53, 0.3); border-radius: 10px; padding: 18px; margin-top: 20px;">
+        <h4 style="color: var(--accent-kafka); font-size: 15px; margin-bottom: 6px;">👀 Kafka UI-da Hadisəni Canlı İzləyin!</h4>
+        <p style="font-size: 13px; color: #cbd5e1;">Yuxarıdakı sorğunu atan kimi brauzerdə <a href="http://localhost:8080" target="_blank" style="color: var(--accent-blue); font-weight: 600; text-decoration: underline;">http://localhost:8080</a> ünvanına daxil olun. Orada <strong>Topics</strong> bölməsinə keçin: <code>user.registered</code> mövzusunun içində göndərdiyiniz məlumatın qeyd olunduğunu öz gözlərinizlə görəcəksiniz!</p>
+      </div>
+    </div>
+
+    <footer>
+      EventFlow Microservices • NestJS + Apache Kafka + PostgreSQL (Drizzle ORM) • Antigravity IDE
+    </footer>
+  </div>
+
+  <script>
+    function switchScenario(scenario) {
+      document.getElementById('scenario-register').style.display = 'none';
+      document.getElementById('scenario-login').style.display = 'none';
+      document.getElementById('scenario-profile').style.display = 'none';
+
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+      if (scenario === 'register') {
+        document.getElementById('scenario-register').style.display = 'block';
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+      } else if (scenario === 'login') {
+        document.getElementById('scenario-login').style.display = 'block';
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+      } else if (scenario === 'profile') {
+        document.getElementById('scenario-profile').style.display = 'block';
+        document.querySelectorAll('.tab-btn')[2].classList.add('active');
+      }
+    }
+
+    function copyText(id) {
+      const text = document.getElementById(id).innerText;
+      navigator.clipboard.writeText(text);
+      alert('Kopyalandı! Terminalda və ya Postman-da işlədə bilərsiniz.');
+    }
+  </script>
+</body>
+</html>
