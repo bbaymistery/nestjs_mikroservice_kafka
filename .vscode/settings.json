@@ -29,9 +29,6 @@
     "liveServer.settings.ChromeDebuggingAttachment": false,
     "npm.enableRunFromFolder": true,
     "redhat.telemetry.enabled": true,
-    "files.associations": {
-        "*.ts": "typescriptreact"
-    },
     "[javascript]": {
         "editor.defaultFormatter": "vscode.typescript-language-features"
     },
