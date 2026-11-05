@@ -1,0 +1,49 @@
+### ================================================================
+### 🎫 TICKETS SERVICE DAXİLİ TESTLƏRİ (DİREKT PORT 3004)
+### ================================================================
+
+### 1. Bilet Al (Daxili Header x-user-id ilə)
+POST http://localhost:3004/purchase
+Content-Type: application/json
+x-user-id: <USER_ID>
+
+{
+  "eventId": "<EVENT_ID>",
+  "quantity": 1
+}
+
+###
+
+### 2. İstifadəçinin Öz Biletləri
+GET http://localhost:3004/my-tickets
+x-user-id: <USER_ID>
+
+###
+
+### 3. Tək Bir Biletin Detalları
+GET http://localhost:3004/<TICKET_ID>
+x-user-id: <USER_ID>
+
+###
+
+### 4. Bileti Ləğv Et
+POST http://localhost:3004/<TICKET_ID>/cancel
+x-user-id: <USER_ID>
+
+###
+
+### 5. Konsert Qapısında Giriş (Check-In)
+POST http://localhost:3004/check-in
+Content-Type: application/json
+x-user-id: <ORGANIZER_ID>
+
+{
+  "ticketCode": "<TICKET_CODE>"
+}
+
+###
+
+### 6. Tədbirə Satılmış Bütün Biletlər
+GET http://localhost:3004/event/<EVENT_ID>
+x-user-id: <ORGANIZER_ID>
+

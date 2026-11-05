@@ -1,0 +1,61 @@
+### ================================================================
+### 🎟️ EVENTS SERVICE DAXİLİ TESTLƏRİ (DİREKT PORT 3003)
+### ================================================================
+
+### 1. Bütün Dərc Olunmuş Tədbirləri Gətir
+GET http://localhost:3003
+
+###
+
+### 2. Tək Bir Tədbiri ID ilə Gətir
+GET http://localhost:3003/<EVENT_ID>
+
+###
+
+### 3. Yeni Tədbir Yarat (Daxili Header x-user-id ilə)
+POST http://localhost:3003
+Content-Type: application/json
+x-user-id: <USER_ID>
+
+{
+  "title": "Caspian Fest 2026",
+  "description": "Canlı yay konserti",
+  "date": "2026-09-01T18:00:00Z",
+  "location": "Baku Crystal Hall",
+  "capacity": 2000,
+  "price": 30
+}
+
+###
+
+### 4. Təşkilatçının Öz Tədbirləri
+GET http://localhost:3003/my-events
+x-user-id: <USER_ID>
+
+###
+
+### 5. Tədbiri Yenilə
+PUT http://localhost:3003/<EVENT_ID>
+Content-Type: application/json
+x-user-id: <USER_ID>
+x-user-role: ORGANIZER
+
+{
+  "title": "Caspian Fest 2026 (Yenilənmiş)",
+  "price": 35
+}
+
+###
+
+### 6. Tədbiri Dərc Et (Publish)
+POST http://localhost:3003/<EVENT_ID>/publish
+x-user-id: <USER_ID>
+x-user-role: ORGANIZER
+
+###
+
+### 7. Tədbiri Ləğv Et (Cancel)
+POST http://localhost:3003/<EVENT_ID>/cancel
+x-user-id: <USER_ID>
+x-user-role: ORGANIZER
+

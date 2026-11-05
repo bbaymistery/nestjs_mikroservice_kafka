@@ -1,0 +1,52 @@
+### ================================================================
+### 🎫 TICKETS API TESTLƏRİ (API GATEWAY VASİTƏSİLƏ - PORT 3000)
+### ================================================================
+
+### 1. Bilet Al (Purchase Ticket) - Qorunan Səhifə
+# Qeyd: <EVENT_ID> yerinə mövcud tədbirin ID-sini yazın
+POST http://localhost:3000/tickets/purchase
+Authorization: Bearer <BURAYA_LOGIN_TOKENINI_QOYUN>
+Content-Type: application/json
+
+{
+  "eventId": "<EVENT_ID>",
+  "quantity": 2
+}
+
+###
+
+### 2. Mənim Biletlərim (Find My Tickets) - Qorunan Səhifə
+GET http://localhost:3000/tickets/my-tickets
+Authorization: Bearer <BURAYA_LOGIN_TOKENINI_QOYUN>
+
+###
+
+### 3. Tək Bir Biletin Detalları - Qorunan Səhifə
+# Qeyd: <TICKET_ID> yerinə aldığınız biletin ID-sini yazın
+GET http://localhost:3000/tickets/<TICKET_ID>
+Authorization: Bearer <BURAYA_LOGIN_TOKENINI_QOYUN>
+
+###
+
+### 4. Bileti Ləğv Et (Cancel Ticket) - Qorunan Səhifə
+POST http://localhost:3000/tickets/<TICKET_ID>/cancel
+Authorization: Bearer <BURAYA_LOGIN_TOKENINI_QOYUN>
+
+###
+
+### 5. Konsert Qapısında Biletlə Giriş Et (Check-In) - Qorunan Səhifə (Təşkilatçı)
+# Qeyd: ticketCode biletin üstündəki unikal koddur (məs: EVT-ABC123XYZ)
+POST http://localhost:3000/tickets/check-in
+Authorization: Bearer <BURAYA_LOGIN_TOKENINI_QOYUN>
+Content-Type: application/json
+
+{
+  "ticketCode": "<TICKET_CODE>"
+}
+
+###
+
+### 6. Bir Tədbirə Satılmış Bütün Biletləri Gör (Təşkilatçı Üçün)
+GET http://localhost:3000/tickets/event/<EVENT_ID>
+Authorization: Bearer <BURAYA_LOGIN_TOKENINI_QOYUN>
+

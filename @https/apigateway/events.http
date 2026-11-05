@@ -1,0 +1,60 @@
+### ================================================================
+### 🎟️ EVENTS API TESTLƏRİ (API GATEWAY VASİTƏSİLƏ - PORT 3000)
+### ================================================================
+
+### 1. Bütün Dərc Olunmuş Tədbirləri Gətir (Açıq / Token Tələb Olunmur)
+GET http://localhost:3000/events
+
+###
+
+### 2. Tək Bir Tədbiri ID ilə Gətir (Açıq / Token Tələb Olunmur)
+# Qeyd: <EVENT_ID> yerinə create etdiyiniz tədbirin id-sini qoyun
+GET http://localhost:3000/events/<EVENT_ID>
+
+###
+
+### 3. Yeni Tədbir Yarat (Qorunan Səhifə - Token Tələb Olunur)
+# Əvvəlcə auth.http-dən login olub aldığınız Bearer tokeni bura qoyun
+POST http://localhost:3000/events
+Authorization: Bearer <BURAYA_LOGIN_TOKENINI_QOYUN>
+Content-Type: application/json
+
+{
+  "title": "Tarkan Bakı Konserti",
+  "description": "Baku Crystal Hall-da canlı möhtəşəm solo konsert",
+  "date": "2026-12-31T20:00:00Z",
+  "location": "Baku Crystal Hall",
+  "capacity": 5000,
+  "price": 50
+}
+
+###
+
+### 4. Yalnız Mənim Yaratdığım Tədbirləri Gətir (Qorunan Səhifə)
+GET http://localhost:3000/events/my-events
+Authorization: Bearer <BURAYA_LOGIN_TOKENINI_QOYUN>
+
+###
+
+### 5. Tədbiri Yenilə / Redaktə Et (Qorunan Səhifə - Yalnız Sahibi və ya Admin)
+PUT http://localhost:3000/events/<EVENT_ID>
+Authorization: Bearer <BURAYA_LOGIN_TOKENINI_QOYUN>
+Content-Type: application/json
+
+{
+  "title": "Tarkan Bakı Konserti (Yenilənmiş Tarix)",
+  "price": 60
+}
+
+###
+
+### 6. Tədbiri Dərc Et (Publish - Satışa Aç və Kafka-ya Event At)
+POST http://localhost:3000/events/<EVENT_ID>/publish
+Authorization: Bearer <BURAYA_LOGIN_TOKENINI_QOYUN>
+
+###
+
+### 7. Tədbiri Ləğv Et (Cancel - Ləğv Et və Kafka-ya Event At)
+POST http://localhost:3000/events/<EVENT_ID>/cancel
+Authorization: Bearer <BURAYA_LOGIN_TOKENINI_QOYUN>
+

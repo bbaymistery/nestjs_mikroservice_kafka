@@ -7,6 +7,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { JwtStrategy } from './jwt.startegy.js';
+import { TicketsModule } from './tickets/ticket.module.js';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { JwtStrategy } from './jwt.startegy.js';
     }),
     AuthModule,
     EventsModule,
+    TicketsModule
   ],
   controllers: [AppController],
   providers: [
