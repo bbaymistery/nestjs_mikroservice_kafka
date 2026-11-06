@@ -5,13 +5,9 @@ import { EmailService } from './email.service';
 export class NotificationsServiceService {
   private readonly logger = new Logger(NotificationsServiceService.name);
 
-  constructor(private readonly emailService: EmailService) {}
+  constructor(private readonly emailService: EmailService) { }
 
-  async sendWelcomeEmail(data: {
-    userId: string;
-    email: string;
-    name: string;
-  }) {
+  async sendWelcomeEmail(data: { userId: string; email: string; name: string }) {
     this.logger.log(`Sending welcome email to ${data.email}`);
 
     const html = `
@@ -26,21 +22,10 @@ export class NotificationsServiceService {
       <p>Happy eventing!</p>
     `;
 
-    await this.emailService.sendEmail(
-      data.email,
-      'Welcome to EventFlow!',
-      html,
-    );
+    await this.emailService.sendEmail(data.email, 'Welcome to EventFlow!', html,);
   }
 
-  async sendTicketPurchasedEmail(data: {
-    userId: string;
-    email?: string;
-    ticketCode: string;
-    eventTitle?: string;
-    quantity: number;
-    totalPrice: number;
-  }) {
+  async sendTicketPurchasedEmail(data: { userId: string; email?: string; ticketCode: string; eventTitle?: string; quantity: number; totalPrice: number; }) {
     const email = data.email || 'user@example.com'; // Fallback for demo
     this.logger.log(`Sending ticket confirmation to ${email}`);
 
@@ -59,11 +44,7 @@ export class NotificationsServiceService {
     await this.emailService.sendEmail(email, 'Your Ticket is Confirmed!', html);
   }
 
-  async sendTicketCancelledEmail(data: {
-    ticketId: string;
-    userId: string;
-    email?: string;
-  }) {
+  async sendTicketCancelledEmail(data: { ticketId: string; userId: string; email?: string; }) {
     const email = data.email || 'user@example.com';
     this.logger.log(`Sending cancellation notice to ${email}`);
 
@@ -76,11 +57,7 @@ export class NotificationsServiceService {
     await this.emailService.sendEmail(email, 'Ticket Cancelled', html);
   }
 
-  sendEventCancelledEmail(data: {
-    eventId: string;
-    eventTitle?: string;
-    organizerId: string;
-  }) {
+  sendEventCancelledEmail(data: { eventId: string; eventTitle?: string; organizerId: string; }) {
     this.logger.log(`Sending event cancellation notice to ${data.organizerId}`);
   }
 }
